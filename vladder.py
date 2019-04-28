@@ -53,6 +53,16 @@ class VLadder(Network):
             loss_ratio = 8.0
             layers = MediumLayers(self)
             self.do_generate_conditional_samples = True
+        elif self.name == "vladder_cifar10":
+            self.cs = [3, 64, 128, 256, 1024]
+            self.ladder0_dim = 5
+            self.ladder1_dim = 5
+            self.ladder2_dim = 5
+            self.ladder3_dim = 10
+            self.num_layers = 4
+            loss_ratio = 8.0
+            layers = MediumLayers(self)
+            self.do_generate_manifold_samples = True 
         elif self.name == "vladder_mnist":
             self.cs = [1, 64, 128, 1024]
             self.ladder0_dim = 2
@@ -296,3 +306,21 @@ class VLadder(Network):
         feed_dict[self.is_training] = False
         output = self.sess.run(self.goutput, feed_dict=feed_dict)
         return output
+    
+    def generate_conditional_manifold_samples(self, external_layer, external_code, latent_code):
+        codes = {key: np.random.normal(size=[self.batch_size, self.ladders[key][1]]) for key in self.ladders}
+
+        # To avoid breaking batch normalization fixed code must be inserted at random locations
+        # num_insertions = 8
+        # if num_insertions > external_code.shape[0]:
+        #     num_insertions = external_code.shape[0]
+        # random_indexes = np.random.choice(range(self.batch_size), size=num_insertions, replace=False)
+        random_indexes = np.random.choice(range(self.batch_size), size=8, replace=False)
+        for key in latent_code:
+            codes[key][random_indexes] = latent_code[key]
+            if key == external_layer:
+                codes[key][random_indexes] = external_code
+        feed_dict = {self.ladders[key][0]: codes[key] for key in self.ladders}
+        feed_dict[self.is_training] = False
+        output = self.sess.run(self.goutput, feed_dict=feed_dict)
+        return output[random_indexes]

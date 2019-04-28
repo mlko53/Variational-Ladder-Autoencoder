@@ -43,6 +43,8 @@ if args.gpus is not '':
 
 if args.dataset == 'mnist':
     dataset = MnistDataset()
+elif args.dataset == 'cifar10':
+    dataset = CIFAR10Dataset()
 elif args.dataset == 'lsun':
     dataset = LSUNDataset(db_path=args.db_path)
 elif args.dataset == 'celebA':
@@ -56,6 +58,6 @@ else:
 model = VLadder(dataset, name=args.netname, reg=args.reg, batch_size=args.batch_size, restart=not args.no_train)
 trainer = NoisyTrainer(model, dataset, args)
 if args.no_train:
-    trainer.visualize()
+    trainer.train()
 else:
     trainer.train()
