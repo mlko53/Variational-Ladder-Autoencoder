@@ -11,3 +11,4 @@ except: # Works for python 2
     from dataset_mnist import MnistDataset
     from dataset_svhn import SVHNDataset
     from dataset_lsun import LSUNDataset
+    from dataset_cifar10 import CIFAR10Dataset
