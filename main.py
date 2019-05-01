@@ -21,7 +21,7 @@ parser.add_argument('--plot_reconstruction', dest='plot_reconstruction', action=
                     help='Plot reconstruction')
 parser.add_argument('--use_gui', dest='use_gui', action='store_true',
                     help='Display the results with a GUI window')
-parser.add_argument('--vis_frequency', type=int, default=1000,
+parser.add_argument('--vis_frequency', type=int, default=5000,
                     help='How many train batches before we perform visualization')
 args = parser.parse_args()
 
@@ -41,6 +41,9 @@ from trainer import NoisyTrainer
 if args.gpus is not '':
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpus
 
+from tensorflow.python.client import device_lib
+print(device_lib.list_local_devices())
+
 if args.dataset == 'mnist':
     dataset = MnistDataset()
 elif args.dataset == 'cifar10':
@@ -54,7 +57,7 @@ elif args.dataset == 'svhn':
 else:
     print("Unknown dataset")
     exit(-1)
-
+print("Creating model")
 model = VLadder(dataset, name=args.netname, reg=args.reg, batch_size=args.batch_size, restart=not args.no_train)
 trainer = NoisyTrainer(model, dataset, args)
 if args.no_train:

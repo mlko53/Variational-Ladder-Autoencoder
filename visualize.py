@@ -59,10 +59,14 @@ class ConditionalSampleVisualizer(Visualizer):
         for i, layer in enumerate(layers):
             samples = np.zeros([num_rows*num_rows]+self.dataset.data_dims)
             samples_ptr = 0
+            layer_latent_code_x = np.tile(np.reshape(np.linspace(-2.0, 2.0, num=num_rows), (1, num_rows)), (num_rows, 1))
+            layer_latent_code_y = layer_latent_code_x.transpose()
+            layer_latent_code = np.reshape(np.stack([layer_latent_code_x, layer_latent_code_y], axis=-1), (-1, 2))
             while samples_ptr < num_rows * num_rows:
                 # Generate a few samples each time. Too many samples with distribution on latent code
                 # different from training time breaks batch norm
-                new_samples, _ = self.network.generate_conditional_samples(layer, latent_code)
+                new_samples, _ = self.network.generate_conditional_samples(layer, latent_code, layer_latent_code)
+                layer_latent_code = layer_latent_code[new_samples.shape[0]:]
                 next_ptr = samples_ptr + new_samples.shape[0]
                 if next_ptr > num_rows * num_rows:
                     next_ptr = num_rows * num_rows

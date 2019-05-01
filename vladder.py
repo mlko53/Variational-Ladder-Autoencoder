@@ -55,14 +55,16 @@ class VLadder(Network):
             self.do_generate_conditional_samples = True
         elif self.name == "vladder_cifar10":
             self.cs = [3, 64, 128, 256, 1024]
-            self.ladder0_dim = 5
-            self.ladder1_dim = 5
-            self.ladder2_dim = 5
+            self.ladder0_dim = 10
+            self.ladder1_dim = 10
+            self.ladder2_dim = 10
             self.ladder3_dim = 10
             self.num_layers = 4
             loss_ratio = 8.0
             layers = MediumLayers(self)
-            self.do_generate_manifold_samples = True 
+            self.do_generate_conditional_samples = True
+            self.do_generate_samples = True
+            #self.do_generate_manifold_samples = True 
         elif self.name == "vladder_mnist":
             self.cs = [1, 64, 128, 1024]
             self.ladder0_dim = 2
@@ -72,7 +74,7 @@ class VLadder(Network):
             loss_ratio = 8.0
             self.error_scale = 8.0
             layers = SmallLayers(self)
-            self.do_generate_manifold_samples = True
+            #self.do_generate_manifold_samples = True
         else:
             print("Unknown architecture name %s" % self.name)
             exit(-1)
@@ -270,14 +272,18 @@ class VLadder(Network):
     def random_latent_code(self):
         return {key: np.random.normal(size=[self.ladders[key][1]]) for key in self.ladders}
 
-    def generate_conditional_samples(self, condition_layer, condition_code):
+    def generate_conditional_samples(self, condition_layer, condition_code, layer_latent_code):
         codes = {key: np.random.normal(size=[self.batch_size, self.ladders[key][1]]) for key in self.ladders}
 
         # To avoid breaking batch normalization the fixed codes must be inserted at random locations
-        random_indexes = np.random.choice(range(self.batch_size), size=8, replace=False)
+	n_samples = min(8, layer_latent_code.shape[0])
+        random_indexes = np.random.choice(range(self.batch_size), size=n_samples, replace=False)
         for key in codes:
             if condition_layer != key:
                 codes[key][random_indexes] = condition_code[key]
+            else:
+                codes[key][random_indexes] = condition_code[key]
+                codes[key][random_indexes, 0:2] =  layer_latent_code[0:n_samples]
 
         feed_dict = {self.ladders[key][0]: codes[key] for key in self.ladders}
         feed_dict[self.is_training] = False
